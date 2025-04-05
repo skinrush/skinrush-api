@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-require('dotenv').config(); // Optional: needed if running locally w/ .env
+
 
 const app = express();
 app.use(cors());
