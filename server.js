@@ -2,12 +2,22 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
+// 🧱 Sequelize DB setup
+const sequelize = require('./db');           // DB connector
+const Skin = require('./models/Skin');       // Skin model
 
 const app = express();
 app.use(cors());
 
 const PORT = process.env.PORT || 3000;
-const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY; // 🔐 Securely pulled from Render env vars
+const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
+
+// 🔄 Sync database models
+sequelize.sync({ alter: true }).then(() => {
+  console.log('🧠 DB synced');
+}).catch((err) => {
+  console.error('❌ DB sync failed:', err);
+});
 
 // ✅ Test endpoint
 app.get('/api/hello', (req, res) => {
