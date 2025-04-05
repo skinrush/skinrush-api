@@ -4,6 +4,7 @@ const sequelize = require('./db');
 
 const CSFILES_URL = 'https://raw.githubusercontent.com/csfloat/cs-files/main/items.json';
 
+
 (async () => {
   try {
     console.log('🔃 Connecting to DB...');
