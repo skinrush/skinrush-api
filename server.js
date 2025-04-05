@@ -52,3 +52,7 @@ app.get('/api/item', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+if (process.env.IMPORT_SKINS === 'true') {
+  require('./importSkins');
+}
