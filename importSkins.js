@@ -2,7 +2,7 @@ const axios = require('axios');
 const Skin = require('./models/Skin');
 const sequelize = require('./db');
 
-const CSFILES_URL = 'https://raw.githubusercontent.com/csfloat/cs-files/main/parsed/items.json';
+const CSFILES_URL = 'https://raw.githubusercontent.com/csfloat/cs-files/main/items.json';
 
 (async () => {
   try {
