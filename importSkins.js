@@ -2,7 +2,6 @@ const axios = require('axios');
 const Skin = require('./models/Skin');
 const sequelize = require('./db');
 
-const CSFILES_URL = 'https://raw.githubusercontent.com/Step7750/CSGOFloat-DB-Website/main/data/skins.json';
 
 (async () => {
   try {
