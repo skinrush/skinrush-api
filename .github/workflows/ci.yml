@@ -1,4 +1,5 @@
-name: CI Pipeline
+# .github/workflows/ci.yml
+name: 🧪 Test & Security Audit
 
 on:
   push:
@@ -7,23 +8,50 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  test-and-audit:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 🧬 Checkout Code
+    - name: 📥 Checkout code
       uses: actions/checkout@v3
 
-    - name: 🟢 Use Node.js
+    - name: 🟢 Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
 
-    - name: 📦 Install Dependencies
+    - name: 📦 Install dependencies
       run: npm ci
 
-    - name: ✅ Run Tests
+    - name: ✅ Run tests
       run: npm test
 
-    - name: 🔍 Run Security Audit
-      run: npm audit --audit-level=high
+    - name: 🔍 Run security audit
+      run: npm audit --audit-level=moderate
+
+  codeql-analysis:
+    name: 🔒 CodeQL Static Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      matrix:
+        language: [ 'javascript' ]
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🧠 Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: 🏗️ Build project
+      run: |
+        npm install
+
+    - name: 🔎 Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
