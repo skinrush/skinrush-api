@@ -1,15 +1,18 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
-const skin = sequelize.define('skin', {
-  name: DataTypes.STRING,
-  weapon: DataTypes.STRING,
-  collection: DataTypes.STRING,
-  rarity: DataTypes.STRING,
-  minFloat: DataTypes.FLOAT,
-  maxFloat: DataTypes.FLOAT,
-  stattrak: DataTypes.BOOLEAN,
-  souvenir: DataTypes.BOOLEAN,
+const Skin = sequelize.define('Skin', {
+  name: { type: DataTypes.STRING, field: 'name' },
+  weapon: { type: DataTypes.STRING, field: 'weapon' },
+  collection: { type: DataTypes.STRING, field: 'collection' },
+  rarity: { type: DataTypes.STRING, field: 'rarity' },
+  minFloat: { type: DataTypes.FLOAT, field: 'minfloat' },
+  maxFloat: { type: DataTypes.FLOAT, field: 'maxfloat' },
+  stattrak: { type: DataTypes.BOOLEAN, field: 'stattrak' },
+  souvenir: { type: DataTypes.BOOLEAN, field: 'souvenir' }
+}, {
+  tableName: 'Skins',
+  timestamps: false
 });
 
-module.exports = skin;
+module.exports = Skin;
