@@ -41,7 +41,7 @@ app.get('/api/hello', (req, res) => {
 // ✅ Live CSFloat market data endpoint
 app.get('/api/item', async (req, res) => {
   try {
-    const { search = 'ak-47 redline', limit = 10 } = req.query;
+    const { search = 'ak-47 redline', limit = 1 } = req.query;
 
     const response = await axios.get('https://api.csfloat.com/v1/listings', {
       headers: {

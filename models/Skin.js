@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../db');
 
-const Skin = sequelize.define('Skin', {
+const skin = sequelize.define('skin', {
   name: DataTypes.STRING,
   weapon: DataTypes.STRING,
   collection: DataTypes.STRING,
@@ -12,4 +12,4 @@ const Skin = sequelize.define('Skin', {
   souvenir: DataTypes.BOOLEAN,
 });
 
-module.exports = Skin;
+module.exports = skin;
