@@ -11,7 +11,7 @@ const Skin = sequelize.define('Skin', {
   stattrak: { type: DataTypes.BOOLEAN, field: 'stattrak' },
   souvenir: { type: DataTypes.BOOLEAN, field: 'souvenir' }
 }, {
-  tableName: 'Skins',
+  tableName: 'skins',
   timestamps: false
 });
 
