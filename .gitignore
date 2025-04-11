@@ -9,3 +9,10 @@ node_modules/
 
 # Ignore temporary files or folders
 temp/
+
+# Python cache
+__pycache__/
+
+# SQLite DBs & backups
+*.sqlite3
+*.bak

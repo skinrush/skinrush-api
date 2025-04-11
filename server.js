@@ -7,6 +7,10 @@ const cors = require('cors');
 const sequelize = require('./db');  // DB connector
 const Skin = require('./models/Skin');  // Skin model
 
+sequelize.authenticate()
+  .then(() => console.log('✅ Connected to DB'))
+  .catch(err => console.error('❌ DB connection failed:', err));
+
 const app = express();
 
 // Configure CORS based on environment

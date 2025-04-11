@@ -1370,4 +1370,3 @@ INSERT INTO skins (name, weapon, collection, rarity, min_float, max_float, statt
 ('Nova | Forest Leaves', 'Nova', 'The Aztec Collection', 'Consumer Grade', 0.06, 0.80, false, false),
 ('XM1014 | Jungle', 'XM1014', 'The Aztec Collection', 'Consumer Grade', 0.06, 0.80, false, false),
 ('P90 | Teardown', 'P90', 'The Aztec Collection', 'Mil-Spec', 0.06, 0.80, false, false);
-
