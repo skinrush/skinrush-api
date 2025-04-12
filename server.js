@@ -7,38 +7,44 @@ const cors = require('cors');
 const sequelize = require('./db');  // DB connector
 const Skin = require('./models/Skin');  // Skin model
 
-sequelize.authenticate()
-  .then(() => console.log('✅ Connected to DB'))
-  .catch(err => console.error('❌ DB connection failed:', err));
-
+// Initialize express app
 const app = express();
+const PORT = process.env.PORT || 3000;
+const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
 
-// Configure CORS based on environment
+// 🌐 Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 🔐 CORS Config
 if (process.env.NODE_ENV === 'production') {
-  // Only allow requests from skinrush
   app.use(cors({ origin: 'https://www.skinrush.pro' }));
 } else {
   app.use(cors());
 }
 
-const PORT = process.env.PORT || 3000;
-const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
+// ✅ Confirm DB connection
+sequelize.authenticate()
+  .then(() => console.log('✅ Connected to DB'))
+  .catch(err => console.error('❌ DB connection failed:', err));
 
-// Database sync: only auto-sync in development
-// if (process.env.NODE_ENV !== 'production') {
-//  sequelize.sync({ alter: true })
-//    .then(() => console.log('🧠 DB synced (development auto-sync)'))
-//    .catch(err => console.error('❌ DB sync failed:', err));
-//} else {
-//  console.log('Running in production mode. Ensure migrations are applied.');
-//}
-
-// ✅ Test endpoint
+// ✅ Health check endpoint
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-// ✅ Live CSFloat market data endpoint
+// ✅ Skin DB endpoint
+app.get('/api/skins', async (req, res) => {
+  try {
+    const skins = await Skin.findAll();
+    res.json(skins);
+  } catch (err) {
+    console.error('❌ Fetch skins error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch skins', details: err.message });
+  }
+});
+
+// ✅ CSFloat live market endpoint
 app.get('/api/item', async (req, res) => {
   try {
     const { search = 'ak-47 redline', limit = 1 } = req.query;
@@ -60,22 +66,12 @@ app.get('/api/item', async (req, res) => {
   }
 });
 
-// Endpoint to fetch skin metadata from your database
-app.get('/api/skins', async (req, res) => {
-  try {
-    const skins = await Skin.findAll();
-    res.json(skins);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch skins', details: err.message });
-  }
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
-
-// Only run the import script in non-production mode
+// 🧠 Optional DB import for dev mode
 if (process.env.NODE_ENV !== 'production' && process.env.IMPORT_SKINS === 'true') {
   require('./importSkins');
 }
+
+// 🚀 Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
