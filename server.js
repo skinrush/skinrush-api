@@ -12,6 +12,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
 
+// 🔁 Market cache store (memory-based)
+const marketCache = {}; // { searchQuery: { timestamp, data } }
+const CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+
+
 // 🌐 Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,19 +49,31 @@ app.get('/api/skins', async (req, res) => {
   }
 });
 
-// ✅ CSFloat live market endpoint
 app.get('/api/item', async (req, res) => {
   try {
-    const { search = 'ak-47 redline', limit = 1 } = req.query;
+    const { search = 'ak-47 redline', limit = 10 } = req.query;
+    const key = `${search}_${limit}`;
 
+    // ⏱️ Check if cache is still valid
+    const cached = marketCache[key];
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
+      return res.json(cached.data); // 🚀 Serve cached data
+    }
+
+    // 🌐 Make fresh API call
     const response = await axios.get('https://api.csfloat.com/v1/listings', {
-      headers: {
-        Authorization: `Bearer ${CSFLOAT_API_KEY}`,
-      },
+      headers: { Authorization: `Bearer ${CSFLOAT_API_KEY}` },
       params: { search, limit },
     });
 
+    // 💾 Store to cache
+    marketCache[key] = {
+      timestamp: Date.now(),
+      data: response.data,
+    };
+
     res.json(response.data);
+
   } catch (error) {
     console.error('❌ CSFloat API error:', error.response?.data || error.message);
     res.status(500).json({
