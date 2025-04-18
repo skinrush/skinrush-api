@@ -9,7 +9,13 @@ const Skin = sequelize.define('Skin', {
   min_float: { type: DataTypes.FLOAT, field: 'min_float' },
   max_float: { type: DataTypes.FLOAT, field: 'max_float' },
   stattrak: { type: DataTypes.BOOLEAN, field: 'stattrak' },
-  souvenir: { type: DataTypes.BOOLEAN, field: 'souvenir' }
+  souvenir: { type: DataTypes.BOOLEAN, field: 'souvenir' },
+  rarityColor: { type: DataTypes.STRING, field: 'rarity_color' },
+  description: DataTypes.TEXT,
+  tag: DataTypes.STRING,
+  origin: DataTypes.STRING,
+  paintIndex: DataTypes.INTEGER,
+
 }, {
   tableName: 'skins',
   timestamps: false
