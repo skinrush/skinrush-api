@@ -2,10 +2,15 @@
   "name": "skinrush-api",
   "version": "1.0.0",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
+    "@wix/members": "^1.0.229",
+    "@wix/pricing-plans": "^1.0.129",
+    "@wix/sdk": "^1.15.17",
     "axios": "^1.8.4",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
