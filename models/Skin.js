@@ -1,7 +1,7 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../db');
+import { DataTypes } from 'sequelize';
+import sequelize from '../db.js';
 
-const Skin = sequelize.define('Skin', {
+export const Skin = sequelize.define('Skin', {
   name: { type: DataTypes.STRING, field: 'name' },
   weapon: { type: DataTypes.STRING, field: 'weapon' },
   collection: { type: DataTypes.STRING, field: 'collection' },
@@ -15,10 +15,7 @@ const Skin = sequelize.define('Skin', {
   tag: DataTypes.STRING,
   origin: DataTypes.STRING,
   paintIndex: DataTypes.INTEGER,
-
 }, {
   tableName: 'skins',
   timestamps: false
 });
-
-module.exports = Skin;
