@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
-import { createClient, OAuthStrategy } from '@wix/sdk';
+import { createClient, ApiKeyStrategy } from '@wix/sdk';
 
 import sequelize from './db.js';
 import { Skin } from './models/Skin.js';
@@ -12,24 +12,34 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
 
-// 🔁 Import Wix pricingPlans module dynamically
-const wixPricingPlansModule = await import('@wix/pricing-plans');
-const wixPricingPlans = wixPricingPlansModule?.pricingPlans || wixPricingPlansModule?.default;
+const { default: rawPricingPlans } = await import('@wix/pricing-plans');
 
-if (!wixPricingPlans) {
-  throw new Error('❌ Failed to load Wix Pricing Plans module');
+// 🧼 Strip out event handlers (or any undefined values that crash the SDK)
+const cleanPricingPlans = {};
+for (const key in rawPricingPlans) {
+  if (rawPricingPlans[key] && typeof rawPricingPlans[key] === 'object') {
+    cleanPricingPlans[key] = {};
+    for (const subKey in rawPricingPlans[key]) {
+      const val = rawPricingPlans[key][subKey];
+      if (val && typeof val === 'function') {
+        cleanPricingPlans[key][subKey] = val;
+      }
+    }
+  }
 }
 
-// 🔨 Init Wix Client
+// ✅ Create the client with sanitized module
 const wixClient = createClient({
   modules: {
-    pricingPlans: wixPricingPlans
+    pricingPlans: cleanPricingPlans
   },
-  auth: OAuthStrategy({
-    clientId: process.env.WIX_CLIENT_ID,
-    clientSecret: process.env.WIX_CLIENT_SECRET
+  auth: ApiKeyStrategy({
+    apiKey: process.env.WIX_API_KEY
   })
 });
+
+
+
 
 // 💾 Cache for CSFloat API
 const marketCache = {};
@@ -39,14 +49,22 @@ const CACHE_DURATION_MS = 10 * 60 * 1000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(cors({ origin: 'https://www.skinrush.pro' }));
-} else {
-  app.use(cors());
-}
+app.use(cors({
+  origin: ['https://www.skinrush.pro', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 
 // 🔐 Routes
 app.use('/auth', authRoutes);
+import membersRoute from './routes/members.js';
+app.use('/api/members', membersRoute);
+
+import steamRoutes from './routes/steam.js';
+app.use('/api/steam', steamRoutes);
+
+
 
 // ✅ Health check
 app.get('/api/hello', (req, res) => {
@@ -95,7 +113,7 @@ app.get('/api/item', async (req, res) => {
   }
 });
 
-// ✅ Check Beta Access Plan
+// ✅ Check Beta Access Plan (manual call with wix-site-id header)
 app.get('/api/check-beta-access', async (req, res) => {
   try {
     const wixUserId = req.query.userId;
@@ -103,17 +121,30 @@ app.get('/api/check-beta-access', async (req, res) => {
       return res.status(400).json({ error: 'Missing Wix User ID' });
     }
 
-    const memberships = await wixClient.pricingPlans.queryMemberships({
-      filter: { userId: wixUserId }
-    });
+    const response = await axios.post(
+      'https://www.wixapis.com/pricing-plans/v2/memberships/query',
+      {
+        filter: { userId: wixUserId }
+      },
+      {
+        headers: {
+          'Authorization': process.env.WIX_API_KEY,
+          'wix-site-id': process.env.WIX_SITE_ID,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    const hasBetaAccess = memberships.memberships.some(m => m.planName === 'Beta Access');
+    const memberships = response.data.memberships || [];
+    const hasBetaAccess = memberships.some(m => m.planName === 'Beta Access');
+
     return res.json({ hasBetaAccess });
   } catch (error) {
-    console.error('❌ Beta Access Check Error:', error);
+    console.error('❌ Beta Access Check Error:', error.response?.data || error.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // ✅ Start your server
 app.listen(PORT, () => {
