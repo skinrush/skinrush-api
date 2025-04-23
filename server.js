@@ -24,13 +24,21 @@ const corsOptions = {
 app.options('*', cors(corsOptions));   // Preflight support
 app.use(cors(corsOptions));            // Standard support
 
-// ✅ Manual CORS headers override for Render edge/CDN issues
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://www.skinrush.pro');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  const allowedOrigin = 'https://www.skinrush.pro';
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // ✅ Short-circuit preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
   next();
 });
+
 
 // ✅ Body parsers
 app.use(express.json());
