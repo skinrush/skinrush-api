@@ -2,41 +2,25 @@ import 'dotenv/config';
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
-import { createClient, ApiKeyStrategy } from '@wix/sdk';
 
+const app = express(); // ✅ app must be defined first
+const PORT = process.env.PORT || 3000;
+
+app.use(cors({
+  origin: ['https://www.skinrush.pro'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
+import { createClient, ApiKeyStrategy } from '@wix/sdk';
 import sequelize from './db.js';
 import { Skin } from './models/Skin.js';
 import authRoutes from './routes/auth.js';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
 const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
 
-const { default: rawPricingPlans } = await import('@wix/pricing-plans');
+// ... rest of your code
 
-// 🧼 Strip out event handlers (or any undefined values that crash the SDK)
-const cleanPricingPlans = {};
-for (const key in rawPricingPlans) {
-  if (rawPricingPlans[key] && typeof rawPricingPlans[key] === 'object') {
-    cleanPricingPlans[key] = {};
-    for (const subKey in rawPricingPlans[key]) {
-      const val = rawPricingPlans[key][subKey];
-      if (val && typeof val === 'function') {
-        cleanPricingPlans[key][subKey] = val;
-      }
-    }
-  }
-}
-
-// ✅ Create the client with sanitized module
-const wixClient = createClient({
-  modules: {
-    pricingPlans: cleanPricingPlans
-  },
-  auth: ApiKeyStrategy({
-    apiKey: process.env.WIX_API_KEY
-  })
-});
 
 
 
@@ -48,12 +32,6 @@ const CACHE_DURATION_MS = 10 * 60 * 1000;
 // 🌐 Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use(cors({
-  origin: ['https://www.skinrush.pro', 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
 
 
 // 🔐 Routes
