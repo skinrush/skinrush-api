@@ -9,30 +9,34 @@ import authRoutes from './routes/auth.js';
 import membersRoute from './routes/members.js';
 import steamRoutes from './routes/steam.js';
 
-// ✅ App + Port
 const app = express();
 const PORT = process.env.PORT || 3000;
 const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
 
-// ✅ CORS setup (works for both preflight + standard)
+// ✅ Full CORS options
 const corsOptions = {
   origin: 'https://www.skinrush.pro',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 };
 
-app.options('*', cors(corsOptions)); // Preflight CORS
-app.use(cors(corsOptions));          // Main CORS
+// ✅ Apply CORS middleware
+app.options('*', cors(corsOptions));   // Preflight support
+app.use(cors(corsOptions));            // Standard support
 
-// ✅ Body parsing
+// ✅ Manual CORS headers override for Render edge/CDN issues
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.skinrush.pro');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+});
+
+// ✅ Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ CSFloat Cache
-const marketCache = {};
-const CACHE_DURATION_MS = 10 * 60 * 1000;
-
-// ✅ API Routes
+// ✅ Route setup
 app.use('/api/auth', authRoutes);
 app.use('/api/members', membersRoute);
 app.use('/api/steam', steamRoutes);
@@ -42,7 +46,7 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-// ✅ Fetch skins from DB
+// ✅ Skin data from DB
 app.get('/api/skins', async (req, res) => {
   try {
     const skins = await Skin.findAll();
@@ -53,7 +57,10 @@ app.get('/api/skins', async (req, res) => {
   }
 });
 
-// ✅ CSFloat API
+// ✅ CSFloat lookup with basic cache
+const marketCache = {};
+const CACHE_DURATION_MS = 10 * 60 * 1000;
+
 app.get('/api/item', async (req, res) => {
   try {
     const { search = 'ak-47 redline', limit = 10 } = req.query;
