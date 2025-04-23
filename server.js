@@ -3,64 +3,57 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 
-const app = express(); // ✅ app must be defined first
-const PORT = process.env.PORT || 3000;
-
-app.use(cors({
-  origin: ['https://www.skinrush.pro'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
-
-import { createClient, ApiKeyStrategy } from '@wix/sdk';
 import sequelize from './db.js';
 import { Skin } from './models/Skin.js';
 import authRoutes from './routes/auth.js';
+import membersRoute from './routes/members.js';
+import steamRoutes from './routes/steam.js';
 
+// ✅ App + Port
+const app = express();
+const PORT = process.env.PORT || 3000;
 const CSFLOAT_API_KEY = process.env.CSFLOAT_API_KEY;
 
-// ... rest of your code
+// ✅ CORS setup (works for both preflight + standard)
+const corsOptions = {
+  origin: 'https://www.skinrush.pro',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+};
 
+app.options('*', cors(corsOptions)); // Preflight CORS
+app.use(cors(corsOptions));          // Main CORS
 
-
-
-
-// 💾 Cache for CSFloat API
-const marketCache = {};
-const CACHE_DURATION_MS = 10 * 60 * 1000;
-
-// 🌐 Middleware
+// ✅ Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ✅ CSFloat Cache
+const marketCache = {};
+const CACHE_DURATION_MS = 10 * 60 * 1000;
 
-// 🔐 Routes
-app.use('/auth', authRoutes);
-import membersRoute from './routes/members.js';
+// ✅ API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/members', membersRoute);
-
-import steamRoutes from './routes/steam.js';
 app.use('/api/steam', steamRoutes);
-
-
 
 // ✅ Health check
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-// ✅ Fetch skins from your database
+// ✅ Fetch skins from DB
 app.get('/api/skins', async (req, res) => {
   try {
     const skins = await Skin.findAll();
     res.json(skins);
   } catch (err) {
-    console.error('❌ Fetch skins error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch skins', details: err.message });
+    console.error('❌ Error fetching skins:', err.message);
+    res.status(500).json({ error: 'Failed to fetch skins' });
   }
 });
 
-// ✅ Query CSFloat listings
+// ✅ CSFloat API
 app.get('/api/item', async (req, res) => {
   try {
     const { search = 'ak-47 redline', limit = 10 } = req.query;
@@ -73,63 +66,22 @@ app.get('/api/item', async (req, res) => {
 
     const response = await axios.get('https://api.csfloat.com/v1/listings', {
       headers: { Authorization: `Bearer ${CSFLOAT_API_KEY}` },
-      params: { search, limit },
+      params: { search, limit }
     });
 
     marketCache[key] = {
       timestamp: Date.now(),
-      data: response.data,
+      data: response.data
     };
 
     res.json(response.data);
   } catch (error) {
-    console.error('❌ CSFloat API error:', error.response?.data || error.message);
-    res.status(500).json({
-      error: 'Failed to fetch data from CSFloat',
-      details: error.response?.data || error.message,
-    });
+    console.error('❌ CSFloat error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to fetch data from CSFloat' });
   }
 });
 
-// ✅ Check Beta Access Plan (manual call with wix-site-id header)
-app.get('/api/check-beta-access', async (req, res) => {
-  try {
-    const wixUserId = req.query.userId;
-    if (!wixUserId) {
-      return res.status(400).json({ error: 'Missing Wix User ID' });
-    }
-
-    const response = await axios.post(
-      'https://www.wixapis.com/pricing-plans/v2/memberships/query',
-      {
-        filter: { userId: wixUserId }
-      },
-      {
-        headers: {
-          'Authorization': process.env.WIX_API_KEY,
-          'wix-site-id': process.env.WIX_SITE_ID,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const memberships = response.data.memberships || [];
-    const hasBetaAccess = memberships.some(m => m.planName === 'Beta Access');
-
-    return res.json({ hasBetaAccess });
-  } catch (error) {
-    console.error('❌ Beta Access Check Error:', error.response?.data || error.message);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-// ✅ Start your server
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-// 🧠 Optional: dev-only import logic
-if (process.env.NODE_ENV !== 'production' && process.env.IMPORT_SKINS === 'true') {
-  await import('./importSkins.js');
-}
