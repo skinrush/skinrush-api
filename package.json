@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "dev": "wix dev",
+    "build": "wix build",
+    "release": "wix release"
   },
   "dependencies": {
     "@wix/members": "^1.0.229",
@@ -18,5 +21,8 @@
     "openid-client": "^6.4.2",
     "pg": "^8.14.1",
     "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@wix/cli": "^1.1.83"
   }
 }

@@ -1,0 +1,5 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/dashboard-page.json",
+  "id": "ebbc868b-699f-40d9-b800-57d7ee660a58",
+  "title": "skinrush-api"
+}
