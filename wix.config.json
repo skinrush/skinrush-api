@@ -1,0 +1,5 @@
+{
+  "$schema": "https://dev.wix.com/wix-cli/schemas/wix-config.json",
+  "appId": "313b8d97-fc7f-4b4f-8c70-e15fab662a9c",
+  "projectId": "skinrush-scaffold"
+}
